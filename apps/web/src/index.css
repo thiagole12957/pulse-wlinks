@@ -68,7 +68,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-accent text-surface-900 hover:bg-accent-400 focus:ring-accent shadow-glow-accent/50 hover:shadow-glow-accent;
+    @apply btn bg-accent text-surface-900 hover:bg-accent-400 focus:ring-accent shadow-glow-accent hover:shadow-glow-accent;
   }
 
   .btn-secondary {
