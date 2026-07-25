@@ -1,0 +1,594 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCED
+  FAILED
+  STALE
+}
+
+enum ContractStatus {
+  ACTIVE
+  INACTIVE
+  PRE_CONTRACT
+  NEGATIVE
+  WITHDRAWN
+  UNKNOWN
+}
+
+enum InternetStatus {
+  ACTIVE
+  DISABLED
+  AUTO_BLOCKED
+  MANUAL_BLOCKED
+  WAITING_SIGNATURE
+  UNKNOWN
+}
+
+enum InvoiceStatus {
+  OPEN
+  PAID
+  PARTIALLY_PAID
+  CANCELED
+  RENEGOTIATED
+  UNKNOWN
+}
+
+enum CaseStatus {
+  NEW
+  ASSIGNED
+  IN_ANALYSIS
+  CONTACTING
+  CUSTOMER_REPLIED
+  WAITING_PAYMENT
+  PROMISE_ACTIVE
+  NEGOTIATING
+  PROMISE_BROKEN
+  NO_CONTACT
+  PICKUP_CANDIDATE
+  PICKUP_PENDING_APPROVAL
+  PICKUP_OPENED
+  REGULARIZED
+  CLOSED
+}
+
+enum PromiseStatus {
+  ACTIVE
+  FULFILLED
+  PARTIALLY_FULFILLED
+  BROKEN
+  CANCELED
+}
+
+enum ContactChannel {
+  WHATSAPP
+  PHONE
+  EMAIL
+  SMS
+  OTHER
+}
+
+enum ContactOutcome {
+  NO_ANSWER
+  ANSWERED
+  CUSTOMER_WILL_PAY
+  PAYMENT_ALREADY_MADE
+  REQUESTED_NEGOTIATION
+  TECHNICAL_PROBLEM
+  WANTS_CANCEL
+  MOVED_ADDRESS
+  DOES_NOT_RECOGNIZE
+  WRONG_CONTACT
+  OTHER
+}
+
+enum PickupStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  OPENED_IN_GC
+  COMPLETED
+  CANCELED
+}
+
+model Branch {
+  id          String   @id @default(uuid())
+  externalId  String   @unique
+  name        String
+  active      Boolean  @default(true)
+  syncedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  contracts   Contract[]
+  rules       CollectionRule[]
+
+  @@index([active])
+}
+
+model CollectionWallet {
+  id          String   @id @default(uuid())
+  externalId  String   @unique
+  name        String
+  active      Boolean  @default(true)
+  syncedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoices    Invoice[]
+  rules       CollectionRule[]
+
+  @@index([active])
+}
+
+model Customer {
+  id              String   @id @default(uuid())
+  externalId      String   @unique
+  legalName       String
+  tradeName       String?
+  documentMasked  String?
+  city            String?
+  district        String?
+  addressMasked   String?
+  sourceUpdatedAt DateTime?
+  syncedAt        DateTime?
+  checksum        String?
+  syncStatus      SyncStatus @default(PENDING)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  contacts        CustomerContact[]
+  contracts       Contract[]
+  invoices        Invoice[]
+  financialProfile FinancialProfile?
+  scoreSnapshots  ScoreSnapshot[]
+  cases           RelationshipCase[]
+
+  @@index([legalName])
+  @@index([syncStatus])
+}
+
+model CustomerContact {
+  id          String   @id @default(uuid())
+  customerId  String
+  type        String
+  valueCipher String
+  valueHash   String?
+  maskedValue String
+  isPrimary   Boolean  @default(false)
+  verifiedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, isPrimary])
+  @@index([valueHash])
+}
+
+model Plan {
+  id          String   @id @default(uuid())
+  externalId  String   @unique
+  name        String
+  monthlyFee  Decimal? @db.Decimal(14, 2)
+  speedMbps   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  contracts   Contract[]
+}
+
+model Contract {
+  id                       String         @id @default(uuid())
+  externalId               String         @unique
+  customerId               String
+  branchId                 String?
+  planId                   String?
+  status                   ContractStatus @default(UNKNOWN)
+  internetStatus           InternetStatus @default(UNKNOWN)
+  trustUnlockEnabled       Boolean?
+  trustUnlockActive        Boolean?
+  lastTrustUnlockAt        DateTime?
+  trustUnlockRestriction   String?
+  sourceUpdatedAt          DateTime?
+  syncedAt                 DateTime?
+  checksum                 String?
+  syncStatus               SyncStatus @default(PENDING)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  customer                 Customer @relation(fields: [customerId], references: [id])
+  branch                   Branch? @relation(fields: [branchId], references: [id])
+  plan                     Plan? @relation(fields: [planId], references: [id])
+  accessAccounts           AccessAccount[]
+  invoices                 Invoice[]
+  cases                    RelationshipCase[]
+
+  @@index([customerId, status])
+  @@index([branchId, internetStatus])
+}
+
+model AccessAccount {
+  id                    String   @id @default(uuid())
+  externalId            String   @unique
+  contractId            String
+  usernameMasked        String?
+  online                Boolean?
+  connectedSeconds      Int?
+  lastConnectionStartAt DateTime?
+  lastConnectionEndAt   DateTime?
+  currentDownloadBytes  BigInt?
+  sourceUpdatedAt       DateTime?
+  syncedAt              DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  contract              Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId, online])
+}
+
+model Invoice {
+  id                String        @id @default(uuid())
+  externalId        String        @unique
+  customerId        String
+  contractId        String?
+  walletId          String?
+  status            InvoiceStatus @default(UNKNOWN)
+  issuedAt          DateTime?
+  dueAt             DateTime
+  paidAt            DateTime?
+  originalAmount    Decimal       @db.Decimal(14, 2)
+  openAmount        Decimal       @db.Decimal(14, 2)
+  paidAmount        Decimal       @default(0) @db.Decimal(14, 2)
+  canceledAmount    Decimal       @default(0) @db.Decimal(14, 2)
+  interestAmount    Decimal       @default(0) @db.Decimal(14, 2)
+  fineAmount        Decimal       @default(0) @db.Decimal(14, 2)
+  discountAmount    Decimal       @default(0) @db.Decimal(14, 2)
+  paymentMethod     String?
+  receiptType       String?
+  sourceUpdatedAt   DateTime?
+  syncedAt          DateTime?
+  checksum          String?
+  syncStatus        SyncStatus @default(PENDING)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  customer          Customer @relation(fields: [customerId], references: [id])
+  contract          Contract? @relation(fields: [contractId], references: [id])
+  wallet            CollectionWallet? @relation(fields: [walletId], references: [id])
+  payments          Payment[]
+  events            InvoiceEvent[]
+  caseLinks         CaseInvoice[]
+  promiseLinks      PromiseInvoice[]
+
+  @@index([status, dueAt])
+  @@index([customerId, dueAt])
+  @@index([contractId, status])
+  @@index([walletId, status])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  externalId  String   @unique
+  invoiceId   String
+  amount      Decimal  @db.Decimal(14, 2)
+  paidAt      DateTime
+  method      String?
+  syncedAt    DateTime?
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId, paidAt])
+}
+
+model InvoiceEvent {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  type        String
+  occurredAt  DateTime
+  payload     Json?
+  createdAt   DateTime @default(now())
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, occurredAt])
+}
+
+model CollectionRule {
+  id                    String   @id @default(uuid())
+  name                  String
+  branchId              String?
+  walletId              String?
+  overdueDays           Int      @default(7)
+  minimumOpenAmount     Decimal  @default(0) @db.Decimal(14, 2)
+  activeContractsOnly   Boolean  @default(true)
+  suspendOnActivePromise Boolean @default(true)
+  autoAssign            Boolean  @default(false)
+  priority              Int      @default(100)
+  active                Boolean  @default(true)
+  conditions            Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  branch                Branch? @relation(fields: [branchId], references: [id])
+  wallet                CollectionWallet? @relation(fields: [walletId], references: [id])
+
+  @@index([active, priority])
+}
+
+model RelationshipCase {
+  id                 String      @id @default(uuid())
+  customerId         String
+  contractId         String?
+  status             CaseStatus  @default(NEW)
+  priorityScore      Int         @default(0)
+  assignedUserId     String?
+  assignedTeamId     String?
+  openedAt           DateTime    @default(now())
+  firstContactAt     DateTime?
+  regularizedAt      DateTime?
+  closedAt           DateTime?
+  lastActivityAt     DateTime    @default(now())
+  version            Int         @default(1)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  customer           Customer    @relation(fields: [customerId], references: [id])
+  contract           Contract?   @relation(fields: [contractId], references: [id])
+  invoices           CaseInvoice[]
+  contacts           ContactAttempt[]
+  promises           PaymentPromise[]
+  tasks              Task[]
+  notes              Note[]
+  insights           AiInsight[]
+  pickupAssessments  PickupAssessment[]
+
+  @@index([status, priorityScore])
+  @@index([assignedUserId, status])
+  @@index([customerId, status])
+  @@index([contractId, status])
+}
+
+model CaseInvoice {
+  caseId     String
+  invoiceId  String
+  addedAt    DateTime @default(now())
+  case       RelationshipCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  invoice    Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@id([caseId, invoiceId])
+}
+
+model ContactAttempt {
+  id             String         @id @default(uuid())
+  caseId         String
+  actorUserId    String
+  channel        ContactChannel
+  outcome        ContactOutcome
+  externalThreadId String?
+  summary        String?
+  contactedAt    DateTime @default(now())
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  case           RelationshipCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, contactedAt])
+  @@index([actorUserId, contactedAt])
+}
+
+model PaymentPromise {
+  id          String        @id @default(uuid())
+  caseId      String
+  createdById String
+  amount      Decimal       @db.Decimal(14, 2)
+  promisedAt  DateTime
+  status      PromiseStatus @default(ACTIVE)
+  fulfilledAt DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  case        RelationshipCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  invoices    PromiseInvoice[]
+
+  @@index([status, promisedAt])
+  @@index([caseId, status])
+}
+
+model PromiseInvoice {
+  promiseId String
+  invoiceId String
+  amount    Decimal? @db.Decimal(14, 2)
+  promise   PaymentPromise @relation(fields: [promiseId], references: [id], onDelete: Cascade)
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@id([promiseId, invoiceId])
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  caseId      String
+  assignedToId String?
+  title       String
+  description String?
+  dueAt       DateTime
+  completedAt DateTime?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  case        RelationshipCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([assignedToId, dueAt, completedAt])
+  @@index([caseId, dueAt])
+}
+
+model Note {
+  id          String   @id @default(uuid())
+  caseId      String
+  authorId    String
+  body        String
+  createdAt   DateTime @default(now())
+  case        RelationshipCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, createdAt])
+}
+
+model FinancialProfile {
+  id                     String   @id @default(uuid())
+  customerId             String   @unique
+  profileVersion         Int      @default(1)
+  totalInvoices          Int      @default(0)
+  onTimePaymentRate      Decimal  @default(0) @db.Decimal(5, 2)
+  averageDelayDays       Decimal  @default(0) @db.Decimal(8, 2)
+  maximumDelayDays       Int      @default(0)
+  lifetimePaidAmount     Decimal  @default(0) @db.Decimal(14, 2)
+  currentOverdueAmount   Decimal  @default(0) @db.Decimal(14, 2)
+  currentOverdueCount    Int      @default(0)
+  fulfilledPromises      Int      @default(0)
+  brokenPromises         Int      @default(0)
+  relationshipMonths     Int      @default(0)
+  lastPaymentAt          DateTime?
+  currentScore           Int      @default(0)
+  scoreClassification    String   @default("UNCLASSIFIED")
+  calculatedAt           DateTime @default(now())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([currentScore])
+  @@index([calculatedAt])
+}
+
+model ScoreSnapshot {
+  id               String   @id @default(uuid())
+  customerId       String
+  score             Int
+  classification    String
+  ruleVersion       String
+  profileVersion    Int
+  factors           Json
+  calculatedAt      DateTime @default(now())
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, calculatedAt])
+}
+
+model AiInsight {
+  id                 String   @id @default(uuid())
+  caseId             String
+  invoiceExternalId  String?
+  profileVersion     Int
+  promptVersion      String
+  modelPolicyVersion String
+  cacheKey           String   @unique
+  status             String
+  inputSummary       Json
+  output              Json?
+  requestedById      String
+  model              String?
+  inputTokens        Int?
+  outputTokens       Int?
+  estimatedCost      Decimal? @db.Decimal(12, 6)
+  generatedAt        DateTime?
+  invalidatedAt      DateTime?
+  invalidationReason String?
+  createdAt          DateTime @default(now())
+  case               RelationshipCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  feedback           AiInsightFeedback[]
+
+  @@index([caseId, invalidatedAt])
+}
+
+model AiInsightFeedback {
+  id          String   @id @default(uuid())
+  insightId   String
+  userId      String
+  useful      Boolean
+  comment     String?
+  createdAt   DateTime @default(now())
+  insight     AiInsight @relation(fields: [insightId], references: [id], onDelete: Cascade)
+
+  @@unique([insightId, userId])
+}
+
+model PickupAssessment {
+  id                    String   @id @default(uuid())
+  caseId                String
+  createdById           String
+  offlineSince          DateTime?
+  contactAttempts       Int
+  hasActivePromise      Boolean
+  hasBlockingTechnicalOrder Boolean
+  equipmentConfirmedAtAddress Boolean?
+  recommendation        String
+  rationale             Json
+  createdAt             DateTime @default(now())
+  case                  RelationshipCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  request               PickupRequest?
+
+  @@index([caseId, createdAt])
+}
+
+model PickupRequest {
+  id            String       @id @default(uuid())
+  assessmentId  String       @unique
+  status        PickupStatus @default(DRAFT)
+  requestedById String
+  approvedById  String?
+  approvedAt    DateTime?
+  rejectionReason String?
+  gcExternalId  String?
+  openedInGcAt  DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  assessment    PickupAssessment @relation(fields: [assessmentId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+model AuditEvent {
+  id            String   @id @default(uuid())
+  actorUserId   String?
+  action        String
+  resourceType  String
+  resourceId    String?
+  branchScope   String?
+  walletScope   String?
+  result        String
+  correlationId String?
+  ipMasked      String?
+  userAgent     String?
+  metadata      Json?
+  occurredAt    DateTime @default(now())
+
+  @@index([resourceType, resourceId, occurredAt])
+  @@index([actorUserId, occurredAt])
+  @@index([correlationId])
+}
+
+model WebhookEvent {
+  id             String   @id @default(uuid())
+  provider       String
+  externalEventId String
+  signatureValid Boolean
+  payloadHash    String
+  status         String
+  receivedAt     DateTime @default(now())
+  processedAt    DateTime?
+  error          String?
+
+  @@unique([provider, externalEventId])
+  @@index([provider, status, receivedAt])
+}
+
+model OutboxEvent {
+  id            String   @id @default(uuid())
+  type          String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  occurredAt    DateTime @default(now())
+  publishedAt   DateTime?
+  attempts      Int      @default(0)
+  lastError     String?
+
+  @@index([publishedAt, occurredAt])
+}
