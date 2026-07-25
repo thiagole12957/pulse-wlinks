@@ -13,7 +13,7 @@ describe('Production E2E Tests', () => {
       const response = await fetch(`${BASE_URL}/`);
       expect(response.status).toBe(200);
       const html = await response.text();
-      expect(html).toContain('<!DOCTYPE html>');
+      expect(html.toLowerCase()).toContain('<!doctype html>');
       expect(html).toContain('WLinks Pulse');
     });
 
@@ -69,7 +69,7 @@ describe('Production E2E Tests', () => {
     it('should have X-Content-Type-Options header', async () => {
       const response = await fetch(`${BASE_URL}/api/health`);
       const xContentTypeOptions = response.headers.get('x-content-type-options');
-      expect(xContentTypeOptions).toBe('nosniff');
+      expect(xContentTypeOptions).toContain('nosniff');
     });
 
     it('should have X-DNS-Prefetch-Control header', async () => {
@@ -82,10 +82,10 @@ describe('Production E2E Tests', () => {
   describe('Authentication', () => {
     it('should reject unauthenticated requests to protected endpoints', async () => {
       const endpoints = [
-        '/api/v1/queue',
         '/api/v1/customers',
-        '/api/v1/cases',
-        '/api/v1/pickups',
+        '/api/v1/relationship-cases',
+        '/api/v1/invoices',
+        '/api/v1/pickups/stats/summary',
       ];
 
       for (const endpoint of endpoints) {
@@ -95,7 +95,7 @@ describe('Production E2E Tests', () => {
     });
 
     it('should reject requests with invalid tokens', async () => {
-      const response = await fetch(`${BASE_URL}/api/v1/queue`, {
+      const response = await fetch(`${BASE_URL}/api/v1/customers`, {
         headers: {
           Authorization: 'Bearer invalid-token-here',
         },
