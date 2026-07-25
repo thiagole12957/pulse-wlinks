@@ -48,12 +48,15 @@ COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
-# Copiar Prisma client gerado - múltiplos caminhos possíveis
+# Copiar Prisma client gerado completo do builder
 COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client ./node_modules/@prisma/client
 
-# Regenerar Prisma client em produção para garantir binários corretos
-RUN cd apps/api && npx prisma generate
+# Instalar openssl para compatibilidade do Prisma e regenerar client
+RUN apk add --no-cache openssl && \
+    npm install -g prisma@5.22.0 && \
+    cd apps/api && prisma generate && \
+    npm uninstall -g prisma
 
 USER nestjs
 
