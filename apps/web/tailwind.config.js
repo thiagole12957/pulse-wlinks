@@ -10,32 +10,33 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
-        // Dark surface colors (inverted scale - higher = darker for dark theme)
+        // Light theme surface colors (Bitrix24 style)
         surface: {
-          DEFAULT: '#0a0a0f',
-          100: '#f4f4f5',
-          200: '#e4e4e7',
-          300: '#d4d4d8',
-          400: '#a1a1aa',
-          500: '#71717a',
-          600: '#3a3a4a',
-          700: '#2a2a38',
-          800: '#1a1a24',
-          900: '#0a0a0f',
+          DEFAULT: '#ffffff',
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#eeeeee',
+          300: '#e0e0e0',
+          400: '#bdbdbd',
+          500: '#9e9e9e',
+          600: '#757575',
+          700: '#616161',
+          800: '#424242',
+          900: '#212121',
         },
-        // Accent: Electric cyan
+        // Accent: WLinks Orange (Bitrix24 style)
         accent: {
-          DEFAULT: '#00d4ff',
-          50: '#e6fbff',
-          100: '#b3f3ff',
-          200: '#80ebff',
-          300: '#4de3ff',
-          400: '#1adbff',
-          500: '#00d4ff',
-          600: '#00a7cc',
-          700: '#007a99',
-          800: '#004d66',
-          900: '#002033',
+          DEFAULT: '#e96c3c',
+          50: '#fff4f0',
+          100: '#ffe4db',
+          200: '#ffc9b8',
+          300: '#ffa98a',
+          400: '#ff8a5c',
+          500: '#e96c3c',
+          600: '#d4582a',
+          700: '#b84a22',
+          800: '#9c3e1c',
+          900: '#803318',
         },
         // Success: Vibrant emerald
         success: {
@@ -87,12 +88,12 @@ export default {
           risk: '#f97316',
           critical: '#ef4444',
         },
-        // Text colors
+        // Text colors (light theme)
         text: {
-          primary: '#f4f4f5',
-          secondary: '#a1a1aa',
-          muted: '#71717a',
-          inverse: '#09090b',
+          primary: '#1a1a1a',
+          secondary: '#525252',
+          muted: '#737373',
+          inverse: '#ffffff',
         },
       },
       fontSize: {
@@ -102,13 +103,14 @@ export default {
         'display-sm': ['1.5rem', { lineHeight: '1.25', letterSpacing: '-0.01em', fontWeight: '600' }],
       },
       boxShadow: {
-        'glow-accent': '0 0 20px rgba(0, 212, 255, 0.3)',
-        'glow-success': '0 0 20px rgba(16, 185, 129, 0.3)',
-        'glow-danger': '0 0 20px rgba(239, 68, 68, 0.3)',
-        'glow-warning': '0 0 20px rgba(245, 158, 11, 0.3)',
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2)',
-        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3)',
-        'elevated': '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4)',
+        'glow-accent': '0 0 20px rgba(233, 108, 60, 0.25)',
+        'glow-success': '0 0 20px rgba(16, 185, 129, 0.25)',
+        'glow-danger': '0 0 20px rgba(239, 68, 68, 0.25)',
+        'glow-warning': '0 0 20px rgba(245, 158, 11, 0.25)',
+        'card': '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)',
+        'card-hover': '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
+        'elevated': '0 10px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.08)',
+        'sidebar': '2px 0 8px rgba(0, 0, 0, 0.08)',
       },
       borderRadius: {
         '4xl': '2rem',
@@ -138,17 +140,15 @@ export default {
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 5px rgba(0, 212, 255, 0.3)' },
-          '50%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 5px rgba(233, 108, 60, 0.2)' },
+          '50%': { boxShadow: '0 0 15px rgba(233, 108, 60, 0.4)' },
         },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-mesh': `
-          radial-gradient(at 40% 20%, rgba(0, 212, 255, 0.08) 0px, transparent 50%),
-          radial-gradient(at 80% 0%, rgba(16, 185, 129, 0.06) 0px, transparent 50%),
-          radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.04) 0px, transparent 50%),
-          radial-gradient(at 80% 100%, rgba(239, 68, 68, 0.04) 0px, transparent 50%)
+          radial-gradient(at 40% 20%, rgba(233, 108, 60, 0.03) 0px, transparent 50%),
+          radial-gradient(at 80% 0%, rgba(16, 185, 129, 0.02) 0px, transparent 50%)
         `,
       },
     },

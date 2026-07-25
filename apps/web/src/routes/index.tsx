@@ -289,12 +289,12 @@ function QueuePage() {
         </div>
         <div className="flex items-center gap-3">
           {/* View toggle */}
-          <div className="flex items-center bg-surface-700 rounded-lg p-1">
+          <div className="flex items-center bg-surface-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('list')}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 viewMode === 'list'
-                  ? 'bg-surface-800 text-accent shadow-sm'
+                  ? 'bg-white text-accent shadow-sm'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
@@ -305,7 +305,7 @@ function QueuePage() {
               onClick={() => setViewMode('kanban')}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 viewMode === 'kanban'
-                  ? 'bg-surface-800 text-accent shadow-sm'
+                  ? 'bg-white text-accent shadow-sm'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
@@ -444,7 +444,7 @@ function StatCard({
 // List View Component
 function ListView({ cases }: { cases: Case[] }) {
   return (
-    <div className="table-container bg-surface-800">
+    <div className="table-container bg-white">
       <table className="table">
         <thead>
           <tr>
@@ -487,7 +487,7 @@ function ListView({ cases }: { cases: Case[] }) {
                     </div>
                     <div className="text-xs text-text-muted flex items-center gap-2">
                       {caseItem.customer.documentMasked}
-                      <span className="text-surface-400">•</span>
+                      <span className="text-text-muted">•</span>
                       #{caseItem.contract.externalId}
                     </div>
                   </Link>
@@ -640,7 +640,7 @@ function KanbanCard({ caseItem, index }: { caseItem: Case; index: number }) {
           {formatRelativeDate(caseItem.lastActivityAt)}
         </div>
         {caseItem.assignedUser && (
-          <div className="avatar-sm text-[10px] bg-surface-700">
+          <div className="avatar-sm text-[10px] bg-surface-100">
             {caseItem.assignedUser.initials}
           </div>
         )}
@@ -648,7 +648,7 @@ function KanbanCard({ caseItem, index }: { caseItem: Case; index: number }) {
 
       {/* Indicators */}
       {(caseItem.hasActivePromise || (caseItem.contactAttempts && caseItem.contactAttempts > 3)) && (
-        <div className="flex gap-1 mt-2 pt-2 border-t border-surface-700">
+        <div className="flex gap-1 mt-2 pt-2 border-t border-surface-200">
           {caseItem.hasActivePromise && (
             <span className="badge-success text-[10px]">Promessa ativa</span>
           )}

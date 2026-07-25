@@ -129,7 +129,7 @@ const mockCase = {
   promises: [
     { id: 'p1', amount: 45000, promisedAt: '2026-07-30', status: 'ACTIVE', createdAt: '2026-07-24T16:30:00Z' },
   ],
-  aiInsight: {
+  analysis: {
     recommendation: 'Cliente com bom histórico de pagamento nos últimos 18 meses. A situação atual parece pontual, possivelmente relacionada a problema temporário de fluxo de caixa. Recomendo manter o diálogo e oferecer parcelamento flexível.',
     suggestedActions: ['Confirmar promessa de pagamento', 'Enviar 2ª via com PIX', 'Agendar lembrete 2 dias antes'],
     priority: 'MEDIUM',
@@ -144,7 +144,7 @@ async function fetchCase(_id: string) {
 
 function CaseDetailPage() {
   const { caseId } = Route.useParams()
-  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'promises' | 'ai'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'promises' | 'analysis'>('overview')
   const [showContactModal, setShowContactModal] = useState(false)
   const [showPromiseModal, setShowPromiseModal] = useState(false)
 
@@ -160,7 +160,7 @@ function CaseDetailPage() {
       <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          <span className="text-surface-400 text-sm">Carregando caso...</span>
+          <span className="text-text-muted text-sm">Carregando caso...</span>
         </div>
       </div>
     )
@@ -178,21 +178,21 @@ function CaseDetailPage() {
         <div className="flex items-start gap-4">
           <Link
             to="/"
-            className="mt-1 p-2 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
+            className="mt-1 p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-100 transition-colors"
           >
             {Icons.arrowLeft}
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-display font-bold text-surface-100">
+              <h1 className="text-2xl font-display font-bold text-text-primary">
                 {caseData.customer.legalName}
               </h1>
               <StatusBadge status={caseData.status} />
             </div>
-            <p className="text-surface-400 mt-1">
+            <p className="text-text-muted mt-1">
               {caseData.customer.documentMasked} • {caseData.customer.city}, {caseData.customer.state}
             </p>
-            <p className="text-sm text-surface-500 mt-1 flex items-center gap-1">
+            <p className="text-sm text-text-muted mt-1 flex items-center gap-1">
               {Icons.calendar}
               <span>Caso aberto em {formatDate(caseData.openedAt)}</span>
             </p>
@@ -216,7 +216,7 @@ function CaseDetailPage() {
           </button>
           <button className="btn-primary flex items-center gap-2">
             {Icons.sparkles}
-            <span>Insight IA</span>
+            <span>Análise</span>
           </button>
         </div>
       </div>
@@ -224,21 +224,21 @@ function CaseDetailPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="card p-4">
-          <div className="text-sm text-surface-400 mb-1">Valor em Atraso</div>
-          <div className="text-2xl font-display font-bold text-score-critical">
+          <div className="text-sm text-text-muted mb-1">Valor em Atraso</div>
+          <div className="text-2xl font-display font-bold text-danger">
             {formatCurrency(totalOverdue)}
           </div>
-          <div className="text-sm text-surface-500 mt-1">
+          <div className="text-sm text-text-muted mt-1">
             {caseData.invoices.length} {caseData.invoices.length === 1 ? 'fatura' : 'faturas'}
           </div>
         </div>
 
         <div className="card p-4">
-          <div className="text-sm text-surface-400 mb-1">Score</div>
+          <div className="text-sm text-text-muted mb-1">Score</div>
           <div className="flex items-center gap-3">
             <ScoreBadge score={caseData.priorityScore} size="lg" />
             <div>
-              <div className="text-sm text-surface-400">
+              <div className="text-sm text-text-muted">
                 {getScoreClassification(caseData.priorityScore)}
               </div>
             </div>
@@ -246,59 +246,59 @@ function CaseDetailPage() {
         </div>
 
         <div className="card p-4">
-          <div className="text-sm text-surface-400 mb-1">Contatos</div>
-          <div className="text-2xl font-display font-bold text-surface-100">
+          <div className="text-sm text-text-muted mb-1">Contatos</div>
+          <div className="text-2xl font-display font-bold text-text-primary">
             {caseData.contacts.length}
           </div>
-          <div className="text-sm text-surface-500 mt-1">
+          <div className="text-sm text-text-muted mt-1">
             {caseData.contacts.filter(c => c.outcome === 'ANSWERED').length} respondidos
           </div>
         </div>
 
         <div className="card p-4">
-          <div className="text-sm text-surface-400 mb-1">Promessa Ativa</div>
+          <div className="text-sm text-text-muted mb-1">Promessa Ativa</div>
           {activePromise ? (
             <>
-              <div className="text-2xl font-display font-bold text-score-good">
+              <div className="text-2xl font-display font-bold text-success">
                 {formatCurrency(activePromise.amount)}
               </div>
-              <div className="text-sm text-surface-500 mt-1">
+              <div className="text-sm text-text-muted mt-1">
                 para {formatDate(activePromise.promisedAt)}
               </div>
             </>
           ) : (
-            <div className="text-lg text-surface-500 mt-1">Nenhuma</div>
+            <div className="text-lg text-text-muted mt-1">Nenhuma</div>
           )}
         </div>
       </div>
 
-      {/* AI Insight banner */}
-      {caseData.aiInsight && (
-        <div className="ai-insight-card">
+      {/* Analysis banner */}
+      {caseData.analysis && (
+        <div className="insight-card">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center text-accent flex-shrink-0">
               {Icons.sparkles}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="font-semibold text-surface-100">Insight IA</h3>
+                <h3 className="font-semibold text-text-primary">Análise do Caso</h3>
                 <span className={`badge ${
-                  caseData.aiInsight.priority === 'HIGH' ? 'badge-danger' :
-                  caseData.aiInsight.priority === 'MEDIUM' ? 'badge-warning' :
+                  caseData.analysis.priority === 'HIGH' ? 'badge-danger' :
+                  caseData.analysis.priority === 'MEDIUM' ? 'badge-warning' :
                   'badge-success'
                 }`}>
-                  {caseData.aiInsight.priority === 'HIGH' ? 'Alta Prioridade' :
-                   caseData.aiInsight.priority === 'MEDIUM' ? 'Média' : 'Baixa'}
+                  {caseData.analysis.priority === 'HIGH' ? 'Alta Prioridade' :
+                   caseData.analysis.priority === 'MEDIUM' ? 'Média' : 'Baixa'}
                 </span>
               </div>
-              <p className="text-surface-300 text-sm leading-relaxed">
-                {caseData.aiInsight.recommendation}
+              <p className="text-text-secondary text-sm leading-relaxed">
+                {caseData.analysis.recommendation}
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
-                {caseData.aiInsight.suggestedActions.map((action, i) => (
+                {caseData.analysis.suggestedActions.map((action, i) => (
                   <button
                     key={i}
-                    className="px-3 py-1.5 bg-surface-700/50 hover:bg-surface-600/50 rounded-lg text-sm text-surface-200 border border-surface-600 transition-colors"
+                    className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 rounded-md text-sm text-text-primary border border-surface-300 transition-colors"
                   >
                     {action}
                   </button>
@@ -310,22 +310,22 @@ function CaseDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-surface-700">
+      <div className="border-b border-surface-200">
         <nav className="flex gap-1">
-          {(['overview', 'contacts', 'promises', 'ai'] as const).map((tab) => (
+          {(['overview', 'contacts', 'promises', 'analysis'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-3 font-medium text-sm transition-colors relative ${
                 activeTab === tab
                   ? 'text-accent'
-                  : 'text-surface-400 hover:text-surface-200'
+                  : 'text-text-muted hover:text-text-primary'
               }`}
             >
               {tab === 'overview' && 'Visão Geral'}
               {tab === 'contacts' && `Contatos (${caseData.contacts.length})`}
               {tab === 'promises' && `Promessas (${caseData.promises.length})`}
-              {tab === 'ai' && 'IA'}
+              {tab === 'analysis' && 'Análise'}
               {activeTab === tab && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
               )}
@@ -348,8 +348,8 @@ function CaseDetailPage() {
           <PromisesTab promises={caseData.promises} />
         )}
 
-        {activeTab === 'ai' && caseData.aiInsight && (
-          <AITab insight={caseData.aiInsight} />
+        {activeTab === 'analysis' && caseData.analysis && (
+          <AnalysisTab analysis={caseData.analysis} />
         )}
       </div>
 
@@ -358,7 +358,7 @@ function CaseDetailPage() {
         <Modal title="Registrar Contato" onClose={() => setShowContactModal(false)}>
           <form className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-2">Canal</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Canal</label>
               <select className="select w-full">
                 <option value="PHONE">Telefone</option>
                 <option value="WHATSAPP">WhatsApp</option>
@@ -366,7 +366,7 @@ function CaseDetailPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-2">Resultado</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Resultado</label>
               <select className="select w-full">
                 <option value="NO_ANSWER">Não atendeu</option>
                 <option value="ANSWERED">Atendeu</option>
@@ -375,7 +375,7 @@ function CaseDetailPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-2">Resumo</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Resumo</label>
               <textarea
                 className="input w-full min-h-[100px] resize-none"
                 placeholder="Descreva o contato..."
@@ -402,9 +402,9 @@ function CaseDetailPage() {
         <Modal title="Nova Promessa de Pagamento" onClose={() => setShowPromiseModal(false)}>
           <form className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-2">Valor</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Valor</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400">R$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">R$</span>
                 <input
                   type="number"
                   className="input w-full pl-10"
@@ -414,11 +414,11 @@ function CaseDetailPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-2">Data Prometida</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Data Prometida</label>
               <input type="date" className="input w-full" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-300 mb-2">Observações</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Observações</label>
               <textarea
                 className="input w-full min-h-[80px] resize-none"
                 placeholder="Observações adicionais..."
@@ -449,22 +449,22 @@ function OverviewTab({ caseData }: { caseData: typeof mockCase }) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Invoices */}
       <div className="card p-5">
-        <h3 className="font-semibold text-surface-100 mb-4 flex items-center gap-2">
+        <h3 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
           {Icons.fileText}
           <span>Faturas em Atraso</span>
         </h3>
         <div className="space-y-3">
           {caseData.invoices.map((invoice) => (
-            <div key={invoice.id} className="flex items-center justify-between p-4 bg-surface-800/50 rounded-lg border border-surface-700">
+            <div key={invoice.id} className="flex items-center justify-between p-4 bg-surface-50 rounded-lg border border-surface-200">
               <div>
-                <div className="font-medium text-surface-200">Fatura {invoice.externalId}</div>
-                <div className="text-sm text-score-critical flex items-center gap-1 mt-1">
+                <div className="font-medium text-text-primary">Fatura {invoice.externalId}</div>
+                <div className="text-sm text-danger flex items-center gap-1 mt-1">
                   {Icons.alertCircle}
                   <span>{invoice.daysOverdue} dias em atraso</span>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-surface-100">{formatCurrency(invoice.openAmount)}</div>
+                <div className="font-bold text-text-primary">{formatCurrency(invoice.openAmount)}</div>
                 <button className="text-sm text-accent hover:text-accent-400 flex items-center gap-1 mt-1">
                   {Icons.send}
                   <span>Enviar 2ª via</span>
@@ -477,16 +477,16 @@ function OverviewTab({ caseData }: { caseData: typeof mockCase }) {
 
       {/* Contract */}
       <div className="card p-5">
-        <h3 className="font-semibold text-surface-100 mb-4">Contrato</h3>
-        <div className="p-4 bg-surface-800/50 rounded-lg border border-surface-700">
+        <h3 className="font-semibold text-text-primary mb-4">Contrato</h3>
+        <div className="p-4 bg-surface-50 rounded-lg border border-surface-200">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-surface-200">#{caseData.contract.externalId}</div>
-              <div className="text-sm text-surface-400 mt-1">{caseData.contract.plan.name}</div>
+              <div className="font-medium text-text-primary">#{caseData.contract.externalId}</div>
+              <div className="text-sm text-text-muted mt-1">{caseData.contract.plan.name}</div>
             </div>
             <div className="text-right">
               <div className={`flex items-center gap-2 text-sm font-medium ${
-                caseData.contract.internetStatus === 'ACTIVE' ? 'text-score-good' : 'text-score-critical'
+                caseData.contract.internetStatus === 'ACTIVE' ? 'text-success' : 'text-danger'
               }`}>
                 {caseData.contract.internetStatus === 'ACTIVE' ? Icons.wifi : Icons.wifiOff}
                 <span>
@@ -500,10 +500,10 @@ function OverviewTab({ caseData }: { caseData: typeof mockCase }) {
 
       {/* Recent contacts */}
       <div className="card p-5 lg:col-span-2">
-        <h3 className="font-semibold text-surface-100 mb-4">Últimos Contatos</h3>
+        <h3 className="font-semibold text-text-primary mb-4">Últimos Contatos</h3>
         <div className="space-y-3">
           {caseData.contacts.slice(0, 3).map((contact) => (
-            <div key={contact.id} className="flex items-start gap-4 p-4 bg-surface-800/50 rounded-lg border border-surface-700">
+            <div key={contact.id} className="flex items-start gap-4 p-4 bg-surface-50 rounded-lg border border-surface-200">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                 contact.channel === 'WHATSAPP' ? 'bg-green-500/20 text-green-400' :
                 contact.channel === 'PHONE' ? 'bg-accent/20 text-accent' :
@@ -515,20 +515,20 @@ function OverviewTab({ caseData }: { caseData: typeof mockCase }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <span className="font-medium text-surface-200">
+                  <span className="font-medium text-text-primary">
                     {contact.channel === 'WHATSAPP' ? 'WhatsApp' :
                      contact.channel === 'PHONE' ? 'Telefone' : 'E-mail'}
                   </span>
                   <OutcomeBadge outcome={contact.outcome} />
                 </div>
-                <div className="text-sm text-surface-500 mt-1 flex items-center gap-1">
+                <div className="text-sm text-text-muted mt-1 flex items-center gap-1">
                   {Icons.clock}
                   <span>{formatDateTime(contact.contactedAt)}</span>
                   <span className="mx-2">•</span>
                   <span>{contact.agent}</span>
                 </div>
                 {contact.summary && (
-                  <div className="text-sm text-surface-300 mt-2 p-2 bg-surface-700/30 rounded">
+                  <div className="text-sm text-text-secondary mt-2 p-2 bg-surface-100/30 rounded">
                     {contact.summary}
                   </div>
                 )}
@@ -546,7 +546,7 @@ function ContactsTab({ contacts }: { contacts: typeof mockCase.contacts }) {
     <div className="card p-5">
       <div className="space-y-4">
         {contacts.map((contact) => (
-          <div key={contact.id} className="flex items-start gap-4 p-4 border border-surface-700 rounded-lg">
+          <div key={contact.id} className="flex items-start gap-4 p-4 border border-surface-200 rounded-lg">
             <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
               contact.channel === 'WHATSAPP' ? 'bg-green-500/20 text-green-400' :
               contact.channel === 'PHONE' ? 'bg-accent/20 text-accent' :
@@ -558,17 +558,17 @@ function ContactsTab({ contacts }: { contacts: typeof mockCase.contacts }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <span className="font-medium text-surface-200">
+                <span className="font-medium text-text-primary">
                   {contact.channel === 'WHATSAPP' ? 'WhatsApp' :
                    contact.channel === 'PHONE' ? 'Telefone' : 'E-mail'}
                 </span>
                 <OutcomeBadge outcome={contact.outcome} />
               </div>
-              <div className="text-sm text-surface-500 mt-1">
+              <div className="text-sm text-text-muted mt-1">
                 {formatDateTime(contact.contactedAt)} • {contact.agent}
               </div>
               {contact.summary && (
-                <div className="text-surface-300 mt-3 p-3 bg-surface-800/50 rounded-lg border border-surface-700">
+                <div className="text-text-secondary mt-3 p-3 bg-surface-50 rounded-lg border border-surface-200">
                   {contact.summary}
                 </div>
               )}
@@ -585,20 +585,20 @@ function PromisesTab({ promises }: { promises: typeof mockCase.promises }) {
     <div className="card p-5">
       <div className="space-y-4">
         {promises.map((promise) => (
-          <div key={promise.id} className="p-5 border border-surface-700 rounded-lg">
+          <div key={promise.id} className="p-5 border border-surface-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xl font-display font-bold text-surface-100">
+                  <span className="text-xl font-display font-bold text-text-primary">
                     {formatCurrency(promise.amount)}
                   </span>
                   <PromiseStatusBadge status={promise.status} />
                 </div>
-                <div className="text-sm text-surface-400 mt-2 flex items-center gap-1">
+                <div className="text-sm text-text-muted mt-2 flex items-center gap-1">
                   {Icons.calendar}
                   <span>Prometido para {formatDate(promise.promisedAt)}</span>
                 </div>
-                <div className="text-sm text-surface-500 mt-1">
+                <div className="text-sm text-text-muted mt-1">
                   Registrado em {formatDateTime(promise.createdAt)}
                 </div>
               </div>
@@ -608,7 +608,7 @@ function PromisesTab({ promises }: { promises: typeof mockCase.promises }) {
                     {Icons.check}
                     <span>Cumprida</span>
                   </button>
-                  <button className="px-4 py-2 border border-score-critical/50 text-score-critical rounded-lg text-sm hover:bg-score-critical/10 transition-colors flex items-center gap-2">
+                  <button className="px-4 py-2 border border-score-critical/50 text-danger rounded-lg text-sm hover:bg-score-critical/10 transition-colors flex items-center gap-2">
                     {Icons.x}
                     <span>Quebrada</span>
                   </button>
@@ -619,8 +619,8 @@ function PromisesTab({ promises }: { promises: typeof mockCase.promises }) {
         ))}
 
         {promises.length === 0 && (
-          <div className="text-center py-12 text-surface-400">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-800 flex items-center justify-center">
+          <div className="text-center py-12 text-text-muted">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white flex items-center justify-center">
               {Icons.handshake}
             </div>
             <p>Nenhuma promessa registrada</p>
@@ -631,31 +631,31 @@ function PromisesTab({ promises }: { promises: typeof mockCase.promises }) {
   )
 }
 
-function AITab({ insight }: { insight: typeof mockCase.aiInsight }) {
+function AnalysisTab({ analysis }: { analysis: typeof mockCase.analysis }) {
   return (
     <div className="card p-6">
       <div className="space-y-8">
         <div>
-          <h3 className="font-semibold text-surface-100 mb-3 flex items-center gap-2">
+          <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
             {Icons.sparkles}
             <span>Recomendação</span>
           </h3>
-          <p className="text-surface-300 leading-relaxed">{insight.recommendation}</p>
+          <p className="text-text-secondary leading-relaxed">{analysis.recommendation}</p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-surface-100 mb-3">Avaliação de Risco</h3>
-          <div className="p-4 bg-surface-800/50 rounded-lg border border-surface-700">
-            <p className="text-surface-300">{insight.riskAssessment}</p>
+          <h3 className="font-semibold text-text-primary mb-3">Avaliação de Risco</h3>
+          <div className="p-4 bg-surface-50 rounded-lg border border-surface-200">
+            <p className="text-text-secondary">{analysis.riskAssessment}</p>
           </div>
         </div>
 
         <div>
-          <h3 className="font-semibold text-surface-100 mb-3">Ações Sugeridas</h3>
+          <h3 className="font-semibold text-text-primary mb-3">Ações Sugeridas</h3>
           <ul className="space-y-2">
-            {insight.suggestedActions.map((action, i) => (
-              <li key={i} className="flex items-center gap-3 p-3 bg-surface-800/50 rounded-lg border border-surface-700 text-surface-300">
-                <span className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center text-sm font-medium">
+            {analysis.suggestedActions.map((action, i) => (
+              <li key={i} className="flex items-center gap-3 p-3 bg-surface-50 rounded-lg border border-surface-200 text-text-secondary">
+                <span className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center text-sm font-medium">
                   {i + 1}
                 </span>
                 {action}
@@ -664,23 +664,23 @@ function AITab({ insight }: { insight: typeof mockCase.aiInsight }) {
           </ul>
         </div>
 
-        <div className="pt-4 border-t border-surface-700">
+        <div className="pt-4 border-t border-surface-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-surface-400">Este insight foi útil?</span>
+              <span className="text-sm text-text-muted">Esta análise foi útil?</span>
               <div className="flex gap-2">
-                <button className="px-4 py-2 border border-score-good/50 text-score-good rounded-lg text-sm hover:bg-score-good/10 transition-colors flex items-center gap-2">
+                <button className="px-4 py-2 border border-success/50 text-success-700 rounded-md text-sm hover:bg-success/10 transition-colors flex items-center gap-2">
                   {Icons.thumbsUp}
                   <span>Sim</span>
                 </button>
-                <button className="px-4 py-2 border border-score-critical/50 text-score-critical rounded-lg text-sm hover:bg-score-critical/10 transition-colors flex items-center gap-2">
+                <button className="px-4 py-2 border border-danger/50 text-danger-700 rounded-md text-sm hover:bg-danger/10 transition-colors flex items-center gap-2">
                   {Icons.thumbsDown}
                   <span>Não</span>
                 </button>
               </div>
             </div>
-            <span className="text-sm text-surface-500">
-              Gerado em {formatDateTime(insight.generatedAt)}
+            <span className="text-sm text-text-muted">
+              Atualizado em {formatDateTime(analysis.generatedAt)}
             </span>
           </div>
         </div>
@@ -692,13 +692,13 @@ function AITab({ insight }: { insight: typeof mockCase.aiInsight }) {
 // Helper Components
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-surface-800 rounded-xl p-6 w-full max-w-md border border-surface-700 shadow-elevated animate-scale-in">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade-in">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md border border-surface-200 shadow-elevated animate-scale-in">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-surface-100">{title}</h2>
+          <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
           <button
             onClick={onClose}
-            className="text-surface-400 hover:text-surface-200 transition-colors"
+            className="text-text-muted hover:text-text-primary transition-colors"
           >
             {Icons.x}
           </button>
