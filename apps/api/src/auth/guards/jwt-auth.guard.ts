@@ -1,27 +1,21 @@
 import { Injectable, ExecutionContext } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 import { AuthGuard } from '@nestjs/passport'
-import { ConfigService } from '@nestjs/config'
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator'
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private configService: ConfigService) {
+  constructor(private reflector: Reflector) {
     super()
   }
 
   canActivate(context: ExecutionContext) {
-    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development')
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ])
 
-    // Em desenvolvimento/teste, usar mock strategy
-    if (nodeEnv === 'development' || nodeEnv === 'test') {
-      const request = context.switchToHttp().getRequest()
-
-      // Mock user para desenvolvimento
-      request.user = {
-        id: 'mock-user-id',
-        email: 'operador@wlinks.com.br',
-        name: 'Operador Teste',
-        roles: ['OPERATOR'],
-      }
+    if (isPublic) {
       return true
     }
 

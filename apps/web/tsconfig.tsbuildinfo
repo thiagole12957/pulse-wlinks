@@ -1,1 +1,1 @@
-{"root":["./src/main.tsx","./src/routetree.gen.ts","./src/routes/__root.tsx","./src/routes/index.tsx"],"version":"5.9.3"}
+{"root":["./src/main.tsx","./src/routetree.gen.ts","./src/routes/__root.tsx","./src/routes/cases.$caseid.tsx","./src/routes/customers.$customerid.tsx","./src/routes/customers.tsx","./src/routes/index.tsx","./src/routes/pickups.tsx","./src/routes/reports.tsx"],"version":"5.9.3"}
