@@ -47,7 +47,13 @@ RUN pnpm install --frozen-lockfile --prod
 COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+
+# Copiar Prisma client gerado - múltiplos caminhos possíveis
 COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client ./node_modules/@prisma/client
+
+# Regenerar Prisma client em produção para garantir binários corretos
+RUN cd apps/api && npx prisma generate
 
 USER nestjs
 
